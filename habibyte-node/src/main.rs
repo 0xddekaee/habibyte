@@ -1,7 +1,7 @@
 use clap::Parser;
 use habibyte_ledger::Ledger;
 use libp2p::{futures::StreamExt, gossipsub, identity, mdns, swarm::SwarmEvent};
-use log::{error, info};
+use log::info;
 use std::sync::Arc;
 use tokio::signal;
 use tokio::sync::RwLock;
@@ -33,30 +33,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Sistem Node Habibyte memulai inisialisasi...");
 
-    // 1. Init Ledger
+    // ---------------------------------------------------------
+    // 1. Inisialisasi Ledger (Buku Besar)
+    // ---------------------------------------------------------
+    // Kita bikin instance ledger baru di memori.
+    // Genesis block (blok pertama) otomatis dibuat di sini.
     let ledger = Ledger::new();
     info!(
         "Ledger terinisialisasi. Genesis Hash: {}",
         ledger.chain[0].hash
     );
+    
+    // Kita bungkus ledger pakai Arc<RwLock> biar aman diakses banyak thread (API & P2P).
     let shared_ledger = Arc::new(RwLock::new(ledger));
 
-    // 2. Start API
+    // ---------------------------------------------------------
+    // 2. Menjalankan Layanan API
+    // ---------------------------------------------------------
+    // API jalan di background task (asynchronous) biar gak nge-blok proses utama.
     let api_ledger = shared_ledger.clone();
     let api_port = args.api_port;
     tokio::spawn(async move {
         habibyte_api::start_api_server(api_port, api_ledger).await;
     });
 
-    // 3. Start P2P
+    // ---------------------------------------------------------
+    // 3. Menjalankan Layanan P2P (Jaringan)
+    // ---------------------------------------------------------
+    // Generate identitas kriptografi unik buat node ini.
     let id_keys = identity::Keypair::generate_ed25519();
     let local_peer_id = libp2p::PeerId::from(id_keys.public());
     info!("Identitas Lokal Node (PeerId): {}", local_peer_id);
 
-    // Use external crate
+    // Setup swarm libp2p pake modul eksternal habibyte_p2p.
     let mut swarm = habibyte_p2p::create_swarm(id_keys, args.p2p_port)?;
 
-    // Subscribe to global topic
+    // Subscribe ke topik global buat dengerin broadcast blok/transaksi.
     let topic = gossipsub::IdentTopic::new("habibyte-global");
     swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
 
@@ -66,30 +78,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         args.p2p_port, api_port
     );
 
-    // 4. Main Event Loop
+    // ---------------------------------------------------------
+    // 4. Main Event Loop (Jantung Sistem)
+    // ---------------------------------------------------------
+    // Loop ini bakal jalan terus buat handle event network atau sinyal shutdown.
     loop {
         tokio::select! {
+            // Tangkap sinyal Ctrl+C dari user buat matiin node baik-baik.
             _ = signal::ctrl_c() => {
                 info!("Sinyal penghentian diterima. Mematikan layanan...");
                 break;
             }
+            // Handle event yang masuk dari network (Swarm).
             event = swarm.select_next_some() => {
                 match event {
                     SwarmEvent::NewListenAddr { address, .. } => {
                        info!("Mendengarkan koneksi P2P di alamat: {}", address);
                     }
+                    // Kalo ada peer baru kedetect lewat mDNS (lokal network).
                     SwarmEvent::Behaviour(habibyte_p2p::AppBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
                         for (peer_id, _addr) in list {
                             info!("Peer Baru Ditemukan (mDNS): {}", peer_id);
+                            // Langsung masukin ke daftar peer gossipsub biar bisa tukeran data.
                             swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
                         }
                     }
+                    // Kalo peer ilang/disconnect.
                     SwarmEvent::Behaviour(habibyte_p2p::AppBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
                          for (peer_id, _addr) in list {
                             info!("Peer Terputus (mDNS): {}", peer_id);
                             swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
                         }
                     }
+                    // Kalo ada pesan masuk (Blok baru / Transaksi).
                     SwarmEvent::Behaviour(habibyte_p2p::AppBehaviourEvent::Gossipsub(gossipsub::Event::Message { propagation_source: peer_id, message_id: _, message })) => {
                          info!("Pesan diterima dari {}: {:?}", peer_id, String::from_utf8_lossy(&message.data));
                     }

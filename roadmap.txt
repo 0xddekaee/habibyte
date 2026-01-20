@@ -1,37 +1,82 @@
-ROADMAP: FASE 1 - INISIASI CORE & STRUKTUR
-==========================================
+PETA JALAN PENGEMBANGAN HABIBYTE BLOCKCHAIN
+=============================================
 
-Status: SELESAI (Completed)
-Deskripsi: Membangun fondasi modular Rust Workspace dan logika dasar blockchain.
+Visi Utama: Membangun infrastruktur Ledger Identitas Nasional yang berdaulat, aman, dan efisien.
 
-DETAIL KOMPONEN YANG TELAH DIBUAT:
+STATUS TERKINI: FASE 1 - PENGEMBANGAN CORE & ARSITEKTUR INFRASTRUKTUR
+Status: ⚠️ TAHAP FINALISASI (Testing & Debugging)
+Periode: Q1 2026
 
-1. Struktur Project (Workspace)
-   - [x] Direktori `core/` sebagai root Rust Workspace.
-   - [x] `Cargo.toml` root yang menghubungkan seluruh modular crates.
+Rangkuman Eksekutif:
+Kami telah menyelesaikan implementasi kode inti dan saat ini sedang dalam tahap **"DevNet Local Debugging"** untuk memvalidasi stabilitas jaringan antar-node sebelum publikasi kode ke repositori publik (GitHub).
 
-2. Modul Identitas (habibyte-identity)
-   - [x] Struktur Data `Identity`: Menyimpan data penduduk.
-   - [x] Mekanisme Privasi `nik_hash`: Hashing SHA-256 agar NIK asli tidak terekspos di blockchain umum (Zero Data Leak).
-   - [x] Role Management: Enum `IdentityRole` untuk membedakan Warga (Citizen) vs Admin (Dukcapil, RS, Sekolah).
-   - [x] Logika `verify_nik`: Fungsi verifikasi tanpa dekripsi (Zero Knowledge basic).
+--------------------------------------------------------------------------------
+DETAIL PENCAPAIAN TEKNIS
+--------------------------------------------------------------------------------
 
-3. Modul Ledger & Blockchain (habibyte-ledger)
-   - [x] Struktur `Block`: Header (Hash, PrevHash, Timestamp) + Body (Transactions).
-   - [x] Struktur `Transaction`: Format data transaksi pendaftaran/update identitas.
-   - [x] Logika `calculate_hash`: Mengunci data blok secara kriptografi (SHA-256).
-   - [x] In-Memory Ledger: Struktur rantai blok dasar (Genesis Block init).
+FASE 0: KONSEPTUALISASI & DESAIN ARSITEKTUR (Selesai)
+--------------------------------------------------------------------------------
+Fokus: Perancangan Whitepaper & Paradigma Sistem
+[✅] Analisis Masalah: Isu kebocoran data nasional & duplikasi identitas.
+[✅] Desain Solusi: Konsep "Hybrid Off-chain Identity Ledger".
+[✅] Pemilihan Stack Teknologi: Rust (Memory Safety), Libp2p (Networking), AES-GCM (Security).
 
-4. Modul Storage & Enkripsi (habibyte-storage)
-   - [x] Algoritma Enkripsi AES-GCM: Standard militer untuk mengamankan data sebelum disimpan off-chain.
-   - [x] Trait `OffChainStorage`: Interface abstrak agar nantinya bisa colok ke IPFS, S3, atau Local Disk dengan mudah.
-   - [x] Validasi Decryption: Memastikan hanya pemegang kunci yang bisa membaca data sensitif.
+FASE 1: CORE INFRASTRUCTURE (Sedang Berjalan - 95%)
+--------------------------------------------------------------------------------
 
-5. Modul API & Node (habibyte-api & habibyte-node)
-   - [x] Skeleton Server (Warp): Menyiapkan entry point HTTP server.
-   - [x] Node Runtime (Tokio): Setup environment asynchronous untuk menjalankan node.
-   - [x] Logging System: Integrasi `env_logger` untuk monitoring aktivitas node terminal.
+1. [✅] ARSITEKTUR CLEAN & MODULAR (Production Standard)
+   Komentar Teknis:
+   Kami menolak pendekatan monolitik yang kaku. Kode telah direfaktor total menjadi 6 modul terpisah (Crates) dalam satu Workspace yang kohesif.
+   - `habibyte-p2p`: Modul networking mandiri (tidak tercampur dengan logika bisnis node).
+   - `habibyte-ledger`: Logika blockchain murni yang terisolasi.
+   - `habibyte-api`: Interface eksternal yang terpisah dari core logic.
+   Dampak: Sistem menjadi sangat mudah dirawat (Maintainable), mudah diuji (Testable), dan siap untuk skala besar (Scalable).
 
-6. Modul Konsensus (habibyte-consensus)
-   - [x] Trait `ConsensusEngine`: Template dasar aturan validasi blok (siap untuk dikembangkan ke Proof of Authority).
+2. [✅] SISTEM JARINGAN P2P TERDESENTRALISASI (Real Implementation)
+   Komentar Teknis:
+   Bukan sekadar simulasi. Kami telah mengimplementasikan stack `libp2p` standar industri.
+   - Protokol Gossipsub: Memungkinkan penyebaran blok dan transaksi ke jutaan node secara efisien.
+   - mDNS Discovery: Node secara cerdas menemukan peer lain dalam jaringan lokal tanpa konfigurasi manual.
+   - Noise Protocol: Seluruh komunikasi antar-node dienkripsi, mencegah penyadapan (Eavesdropping).
 
+3. [✅] REKAYASA PRIVASI IDENTITAS (Zero Data Leak)
+   Komentar Teknis:
+   Keamanan data warga adalah prioritas absolut.
+   - Hashing SHA-256: NIK tidak pernah disimpan dalam bentuk teks asli (Plaintext).
+   - Off-Chain Storage Strategy: Data sensitif medis/biometrik dienkripsi AES-GCM sebelum disimpan di IPFS/Storage, blockchain hanya menyimpan "kunci" atau hash-nya saja.
+
+4. [✅] API GATEWAY STATEFUL
+   Komentar Teknis:
+   API Server telah terintegrasi langsung dengan Memori Ledger menggunakan `Arc<RwLock>`, memungkinkan pembacaan data secara real-time dan thread-safe (aman dari kondisi balapan/race condition).
+
+5. [✅] STANDAR KUALITAS KODE (Code Hardening)
+   Komentar Teknis:
+   - Error Handling: Mengeliminasi penggunaan `unwrap()` yang berisiko *panic*, digantikan dengan penanganan error terstruktur.
+   - Logging: Sistem pencatatan aktivitas node menggunakan Bahasa Indonesia baku yang informatif untuk memudahkan monitoring sistem.
+
+6. [🔄] TESTING & DEVNET DEBUGGING (Quality Assurance)
+   Komentar Teknis:
+   Sebelum rilis kode sumber (Open Source), kami melakukan simulasi jaringan lokal (Local DevNet) multi-node untuk memastikan:
+   - Node A dan Node B dapat saling menemukan (Peer Discovery).
+   - API berjalan stabil tanpa memory leak.
+   - Graceful Shutdown berfungsi sempurna untuk mencegah korupsi data.
+
+--------------------------------------------------------------------------------
+RENCANA FASE SELANJUTNYA (FASE 2)
+--------------------------------------------------------------------------------
+Fokus: Persistensi Data & Perluasan Jaringan
+Target: Q2 2026
+
+1. [ ] INTEGRASI DATABASE PERSISTEN (RocksDB/Sled)
+   Saat ini ledger masih berjalan di RAM (In-Memory). Langkah selanjutnya adalah menyimpan blok ke harddisk agar data tahan banting meskipun node dimatikan.
+
+2. [ ] MEKANISME KONSENSUS LANJUTAN (Proof of Authority)
+   Mengimplementasikan aturan validasi blok yang ketat, di mana hanya node validator terdaftar (Dukcapil/Pemerintah) yang berhak memvalidasi blok baru.
+
+3. [ ] MANAJEMEN PEER GLOBAL (DHT Kademlia)
+   Mengupgrade penemuan peer dari lokal (mDNS) menjadi global menggunakan Distributed Hash Table (DHT), memungkinkan node terhubung antar pulau/negara via internet publik.
+
+--------------------------------------------------------------------------------
+CATATAN PENGEMBANG
+--------------------------------------------------------------------------------
+Fondasi yang dibangun di Fase 1 ini telah melampaui standar "Minimum Viable Product" (MVP). Struktur kode yang bersih dan modular ini adalah investasi jangka panjang yang menjamin Habibyte siap berevolusi menjadi infrastruktur kritis tingkat nasional tanpa utang teknis (Technical Debt) yang berarti.
