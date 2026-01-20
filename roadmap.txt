@@ -1,0 +1,37 @@
+ROADMAP: FASE 1 - INISIASI CORE & STRUKTUR
+==========================================
+
+Status: SELESAI (Completed)
+Deskripsi: Membangun fondasi modular Rust Workspace dan logika dasar blockchain.
+
+DETAIL KOMPONEN YANG TELAH DIBUAT:
+
+1. Struktur Project (Workspace)
+   - [x] Direktori `core/` sebagai root Rust Workspace.
+   - [x] `Cargo.toml` root yang menghubungkan seluruh modular crates.
+
+2. Modul Identitas (habibyte-identity)
+   - [x] Struktur Data `Identity`: Menyimpan data penduduk.
+   - [x] Mekanisme Privasi `nik_hash`: Hashing SHA-256 agar NIK asli tidak terekspos di blockchain umum (Zero Data Leak).
+   - [x] Role Management: Enum `IdentityRole` untuk membedakan Warga (Citizen) vs Admin (Dukcapil, RS, Sekolah).
+   - [x] Logika `verify_nik`: Fungsi verifikasi tanpa dekripsi (Zero Knowledge basic).
+
+3. Modul Ledger & Blockchain (habibyte-ledger)
+   - [x] Struktur `Block`: Header (Hash, PrevHash, Timestamp) + Body (Transactions).
+   - [x] Struktur `Transaction`: Format data transaksi pendaftaran/update identitas.
+   - [x] Logika `calculate_hash`: Mengunci data blok secara kriptografi (SHA-256).
+   - [x] In-Memory Ledger: Struktur rantai blok dasar (Genesis Block init).
+
+4. Modul Storage & Enkripsi (habibyte-storage)
+   - [x] Algoritma Enkripsi AES-GCM: Standard militer untuk mengamankan data sebelum disimpan off-chain.
+   - [x] Trait `OffChainStorage`: Interface abstrak agar nantinya bisa colok ke IPFS, S3, atau Local Disk dengan mudah.
+   - [x] Validasi Decryption: Memastikan hanya pemegang kunci yang bisa membaca data sensitif.
+
+5. Modul API & Node (habibyte-api & habibyte-node)
+   - [x] Skeleton Server (Warp): Menyiapkan entry point HTTP server.
+   - [x] Node Runtime (Tokio): Setup environment asynchronous untuk menjalankan node.
+   - [x] Logging System: Integrasi `env_logger` untuk monitoring aktivitas node terminal.
+
+6. Modul Konsensus (habibyte-consensus)
+   - [x] Trait `ConsensusEngine`: Template dasar aturan validasi blok (siap untuk dikembangkan ke Proof of Authority).
+

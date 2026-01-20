@@ -1,0 +1,11 @@
+[workspace]
+resolver = "2"
+members = [
+    "habibyte-node",
+    "habibyte-ledger",
+    "habibyte-identity",
+    "habibyte-storage",
+    "habibyte-consensus",
+    "habibyte-api",
+    "habibyte-p2p",
+]

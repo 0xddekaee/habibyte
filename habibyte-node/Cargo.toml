@@ -1,0 +1,17 @@
+[package]
+name = "habibyte-node"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+habibyte-ledger = { path = "../habibyte-ledger" }
+habibyte-identity = { path = "../habibyte-identity" }
+habibyte-storage = { path = "../habibyte-storage" }
+habibyte-api = { path = "../habibyte-api" }
+habibyte-p2p = { path = "../habibyte-p2p" }
+tokio = { version = "1.0", features = ["full"] }
+log = "0.4"
+env_logger = "0.10"
+clap = { version = "4.4", features = ["derive"] }
+# Libp2p needed for types in main.rs loop
+libp2p = { version = "0.53", features = ["tokio", "gossipsub", "mdns"] }
