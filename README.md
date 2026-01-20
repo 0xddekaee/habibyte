@@ -1,63 +1,90 @@
 # Habibyte Core Blockchain
 
-**Habibyte** is a modular Rust blockchain designed for national identity management. It focuses on privacy (Zero Data Leaks), unique identity verification (Zero Duplicates), and secure off-chain data storage.
+[![Language](https://img.shields.io/badge/Language-Rust-orange.svg?style=flat-square)](https://www.rust-lang.org)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-lightgrey.svg?style=flat-square)](https://docs.rs)
+[![Architecture](https://img.shields.io/badge/Architecture-Modular-blue.svg?style=flat-square)](https://github.com/habibyte)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![Status](https://img.shields.io/badge/Phase-1%20Complete-success.svg?style=flat-square)](roadmap.txt)
 
-## 🚀 Getting Started
+**Habibyte** adalah infrastruktur blockchain berdaulat yang dirancang untuk menjadi fondasi **Ledger Identitas Nasional** generasi baru. Dibangun dengan arsitektur modular berbasis **Rust**, sistem ini memprioritaskan keamanan data mutlak (*Zero Data Leaks*), validitas identitas tunggal (*Zero Duplicate*), dan performa tinggi untuk skala negara.
 
-### Prerequisites
-
-You need the following installed on your system:
-
-1.  **Rust Toolchain**: [Install Rust](https://rustup.rs/)
-    ```bash
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-    ```
-2.  **Build Essentials** (Required for compiling dependencies):
-    ```bash
-    sudo apt update
-    sudo apt install build-essential -y
-    ```
-    *(Note: If you are on WSL, make sure your package list is updated)*
-
-### 🛠️ Building the Project
-
-Navigate to the `core` directory and build the entire workspace:
-
-```bash
-cd core
-cargo build
-```
-
-### ▶️ Running the Node
-
-To start the main blockchain node entry point:
-
-```bash
-cargo run -p habibyte-node
-```
-
-You should see logs indicating the Node and Ledger have started.
+Sistem ini menerapkan pendekatan **Privacy-First Hybrid Architecture**: data sensitif warga (seperti rekam medis atau biometrik) dienkripsi menggunakan standar militer (AES-GCM) dan disimpan secara *off-chain* (IPFS/Private Storage), sementara *blockchain* hanya menyimpan bukti kriptografis (Proof) dan Hash yang tidak dapat dipalsukan.
 
 ---
 
-## 📂 Project Structure
+## 🏛️ Fitur Utama
 
-The project is organized as a Cargo Workspace with modular crates:
+-   **Zero Duplicate Identity Engine**
+    Mencegah pendaftaran ganda menggunakan algoritma hashing canggih pada NIK, memastikan satu individu hanya memiliki satu identitas digital yang valid di seluruh ekosistem layanan negara (BPJS, Dukcapil, Rumah Sakit).
 
-- **`habibyte-node`**: The main executable. It initializes the system, P2P networking, and API.
-- **`habibyte-p2p`**: **[New]** Dedicated networking library using `libp2p`. Handles Gossipsub and mDNS interactions cleanly.
-- **`habibyte-identity`**: Handles NIK hashing (privacy) and `Identity` logic. Ensures "Zero Duplicate" identities.
-- **`habibyte-ledger`**: Defines the Blockchain `Block`, `Transaction`, and in-memory `Ledger`.
-- **`habibyte-storage`**: Handles AES-GCM encryption and interfaces for Off-Chain storage (IPFS/Local).
-- **`habibyte-api`**: Provides the HTTP/JSON-RPC interface for external apps (e.g., website, mobile app).
-- **`habibyte-consensus`**: Logic for block validation (Proof of Authority).
+-   **Modular & Scalable Architecture**
+    Dibangun dengan prinsip *Clean Architecture*, memisahkan logika P2P, Konsensus, Ledger, dan API ke dalam modul terisolasi. Ini memungkinkan pembaharuan sistem tanpa mematikan jaringan (*seamless upgrade*).
 
-## 🔐 Key Features
+-   **Secure Off-Chain Storage**
+    Integrasi penyimpanan data hibrida. Data rahasia tetap di tangan pemilik (User-Centric) atau instansi berwenang, terenkripsi penuh, tidak pernah diekspos secara telanjang di ledger publik.
 
-- **Privacy First**: Sensitive NIKs are hashed (`SHA-256`) before being stored on-chain.
-- **Off-Chain Data**: Real citizen data is encrypted using `AES-GCM` and stored off-chain (IPFS ready), preserving privacy while maintaining data integrity.
-- **Modular Design**: Components are decoupled, allowing easy upgrades to consensus or storage mechanisms.
+-   **Standardized Interoperability**
+    Dilengkapi dengan API Gateway (REST/RPC) yang siap diintegrasikan dengan sistem *legacy* pemerintahan maupun aplikasi modern.
 
-## 🗺️ Roadmap
+---
 
-See [roadmap.txt](./roadmap.txt) for the detailed development plan.
+## 🏗️ Arsitektur Sistem
+
+Proyek ini dikelola sebagai *Rust Workspace* dengan pembagian modul (Crates) yang tegas:
+
+| Modul | Fungsi & Tanggung Jawab |
+| :--- | :--- |
+| **`habibyte-node`** | **Orchestrator**. Binary utama yang menjalankan node, mengelola *lifecycle* service, dan menangani *graceful shutdown*. |
+| **`habibyte-p2p`** | **Networking Layer**. Menangani komunikasi *peer-to-peer* terdesentralisasi menggunakan stack `libp2p` (Gossipsub, mDNS, Noise). |
+| **`habibyte-ledger`** | **Core Logic**. Menyimpan struktur data Blok, Transaksi, dan memvalidasi integritas rantai (*Immutable Ledger*). |
+| **`habibyte-identity`** | **Privacy Engine**. Mengatur logika identitas, *hashing* data pribadi, dan verifikasi kepemilikan. |
+| **`habibyte-storage`** | **Data Persistence**. Interface untuk enkripsi/dekripsi AES-GCM dan konektor ke penyimpanan eksternal (IPFS/Disk). |
+| **`habibyte-consensus`** | **Agreement Protocol**. Logika validasi blok dan aturan konsensus (saat ini *Authority-based*). |
+| **`habibyte-api`** | **Gateway**. Menyediakan akses HTTP untuk aplikasi eksternal berinteraksi dengan blockchain. |
+
+---
+
+## 🚀 Panduan Memulai
+
+### Prasyarat Sistem
+Pastikan lingkungan pengembangan Anda telah siap:
+-   **Rust Toolchain** (Stable terbaru)
+-   **Build Essentials** (GCC/G++ untuk kompilasi ketergantungan kriptografi)
+
+```bash
+# Update sistem dan install compiler
+sudo apt update && sudo apt install build-essential -y
+```
+
+### Kompilasi & Eksekusi
+
+Jalankan perintah berikut untuk membangun seluruh infrastruktur dari kode sumber:
+
+```bash
+# Masuk ke direktori core
+cd core
+
+# Jalankan Node Utama (Default Port)
+cargo run -p habibyte-node
+```
+
+### Konfigurasi Lanjutan (CLI)
+
+Node dapat dikonfigurasi secara dinamis saat *runtime* untuk kebutuhan validator atau *bootnode*:
+
+```bash
+# Menjalankan node pada Port P2P 7000 dan API 9090
+cargo run -p habibyte-node -- --p2p-port 7000 --api-port 9090
+```
+
+---
+
+## 🗺️ Peta Jalan (Roadmap)
+
+Pengembangan Habibyte dibagi menjadi fase-fase strategis untuk menjamin stabilitas produksi. Saat ini kami telah menyelesaikan **Fase 1**.
+
+Untuk detail pencapaian dan rencana teknis selanjutnya, silakan baca file [**roadmap.txt**](./roadmap.txt).
+
+---
+
+*Dikembangkan untuk kemandirian teknologi bangsa.*
